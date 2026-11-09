@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foreguild — Operating Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: silicon greys + emblem neon (cyan → green → blue) + button violet ---------- */
+:root{
+  --bg:#ECEDF0; --ink:#0E1116; --ink-2:#4A505B; --line:rgba(14,17,22,.10);
+  --glass:rgba(255,255,255,.55); --glass-strong:rgba(255,255,255,.72);
+  --cyan:#22D3EE; --teal:#14B8A6; --green:#2EE6A6; --blue:#1E5BFF; --navy:#0B2A6B; --violet:#6D28FF;
+  --radius:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(1200px 700px at 80% -10%,#F7F8FA 0%,transparent 60%),
+             radial-gradient(900px 600px at -10% 10%,#F4F5F7 0%,transparent 55%),var(--bg);
+  color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+
+/* ---------- Neon blobs (fixed, behind everything, lean toward the cursor) ---------- */
+.neon{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;will-change:transform;mix-blend-mode:multiply}
+.b1{width:46vw;height:46vw;left:-8vw;bottom:-30vw;background:var(--cyan);animation:drift1 18s ease-in-out infinite}
+.b2{width:40vw;height:40vw;left:30vw;bottom:-28vw;background:var(--blue);opacity:.38;animation:drift2 22s ease-in-out infinite}
+.b3{width:44vw;height:44vw;right:-10vw;bottom:-26vw;background:var(--green);animation:drift3 20s ease-in-out infinite}
+.b4{width:22vw;height:22vw;left:18vw;bottom:-10vw;background:var(--violet);opacity:.28;animation:drift2 26s ease-in-out infinite reverse}
+@keyframes drift1{50%{transform:translate(6vw,-3vw) scale(1.08)}}
+@keyframes drift2{50%{transform:translate(-5vw,-4vw) scale(1.1)}}
+@keyframes drift3{50%{transform:translate(-4vw,-2vw) scale(.94)}}
+/* Fine grain for a machined "silicon" surface */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+/* ---------- Cursor glow (follows the mouse; grows over links) ---------- */
+.glow{position:fixed;left:0;top:0;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;
+  pointer-events:none;z-index:2;opacity:0;transition:opacity .4s,width .3s,height .3s;
+  background:radial-gradient(circle,rgba(34,211,238,.20) 0%,rgba(46,230,166,.10) 35%,transparent 70%)}
+.dot{position:fixed;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;pointer-events:none;z-index:60;
+  background:linear-gradient(135deg,var(--cyan),var(--green));box-shadow:0 0 14px rgba(34,211,238,.8);opacity:0;
+  transition:width .2s,height .2s,margin .2s,opacity .3s,background .2s}
+.dot.big{width:44px;height:44px;margin:-22px 0 0 -22px;background:rgba(34,211,238,.14);border:1px solid rgba(34,211,238,.55);box-shadow:none}
+
+/* ---------- Header ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:22px clamp(20px,4vw,56px);transition:background .3s,backdrop-filter .3s,box-shadow .3s}
+header.solid{background:rgba(236,237,240,.62);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 1px 0 var(--line)}
+.brand img{height:30px;display:block;opacity:0;transform:translateY(-6px);transition:.4s}
+header.solid .brand img,body.plan-mode .brand img{opacity:1;transform:none}
+nav{display:flex;gap:12px}
+.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:112px;height:40px;padding:0 20px;
+  border-radius:999px;font-size:15px;font-weight:500;text-decoration:none;color:var(--navy);
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1.5px solid rgba(20,184,166,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 6px 18px rgba(14,17,22,.06);
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),background .25s,color .25s,box-shadow .25s;overflow:hidden}
+.pill::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .25s;
+  background:linear-gradient(120deg,var(--cyan),var(--green))}
+.pill span{position:relative}
+.pill:hover::before,.pill.active::before{opacity:1}
+.pill:hover,.pill.active{color:#04222A;box-shadow:0 8px 26px rgba(34,211,238,.35)}
+
+/* ---------- Views (hash routing: #home / #plan) ---------- */
+main{position:relative;z-index:3}
+.view{display:none}
+.view.on{display:block;animation:viewIn .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- Home ---------- */
+.hero{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:2vw;
+  padding:110px clamp(20px,4vw,56px) 80px}
+.hero-left{max-width:680px}
+.wordmark{width:min(420px,70vw);display:block;margin-bottom:34px}
+h1.headline{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.02em;line-height:.92;
+  font-size:clamp(56px,7.4vw,112px);margin:0 0 26px}
+h1.headline em{font-style:normal;background:linear-gradient(100deg,var(--navy) 0%,var(--blue) 40%,var(--teal) 75%,var(--green) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:sheen 8s ease-in-out infinite}
+@keyframes sheen{50%{background-position:100% 0}}
+.lede{font-size:clamp(17px,1.6vw,22px);line-height:1.45;color:#1E232B;max-width:600px;margin:0 0 40px}
+.cta-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 54px;border-radius:999px;
+  background:var(--violet);color:#fff;text-decoration:none;font-size:18px;font-weight:500;
+  box-shadow:0 10px 30px rgba(109,40,255,.38),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.cta:hover{box-shadow:0 16px 44px rgba(109,40,255,.5),inset 0 1px 0 rgba(255,255,255,.35)}
+.cta svg{transition:transform .25s}
+.cta:hover svg{transform:translateX(4px)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:34px}
+.stat{padding:10px 14px;border-radius:14px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.8);box-shadow:0 4px 14px rgba(14,17,22,.05);font-size:13px;color:var(--ink-2)}
+.stat b{display:block;font-size:18px;color:var(--ink);font-weight:600}
+.socials{display:flex;gap:14px;margin-top:34px;padding-left:4px}
+.soc{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;text-decoration:none;
+  border:1.5px solid rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(14,17,22,.14);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.soc:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 10px 26px rgba(34,211,238,.35)}
+.soc{overflow:hidden}
+.soc img{width:100%;height:100%;object-fit:cover;display:block}
+.soc.x{background:#7a0e0e}
+.soc.seer{background:radial-gradient(circle at 35% 30%,#24324A,#0B1020)}
+
+.stage{position:relative;display:grid;place-items:center;perspective:1200px;min-height:520px}
+.emblem-wrap{position:relative;width:min(520px,40vw);transform-style:preserve-3d;transition:transform .2s ease-out}
+.emblem{width:100%;display:block;animation:float 6s ease-in-out infinite;filter:drop-shadow(0 30px 40px rgba(11,42,107,.25))}
+@keyframes float{50%{transform:translateY(-14px)}}
+.emblem-halo{position:absolute;inset:12%;border-radius:50%;filter:blur(60px);z-index:-1;opacity:.55;
+  background:conic-gradient(from 200deg,var(--cyan),var(--blue),var(--green),var(--cyan));animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.emblem-shine{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:.0;transition:opacity .3s;
+  -webkit-mask:url(img/emblem.png) center/contain no-repeat;mask:url(img/emblem.png) center/contain no-repeat;
+  background:radial-gradient(260px circle at var(--sx,50%) var(--sy,50%),rgba(255,255,255,.75),transparent 60%)}
+.stage:hover .emblem-shine{opacity:1}
+.shadow{width:min(560px,44vw);height:46px;border-radius:50%;margin-top:30px;
+  background:radial-gradient(closest-side,rgba(14,17,22,.22),transparent);animation:shadow 6s ease-in-out infinite}
+@keyframes shadow{50%{transform:scaleX(.88);opacity:.7}}
+
+/* ---------- Plan page ---------- */
+.plan-shell{display:grid;grid-template-columns:250px minmax(0,880px);gap:36px;justify-content:center;
+  padding:120px clamp(16px,3vw,40px) 120px}
+.toc{position:sticky;top:104px;align-self:start;max-height:calc(100vh - 130px);overflow:auto;padding:18px;border-radius:var(--radius);
+  background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.85);
+  box-shadow:0 10px 30px rgba(14,17,22,.06)}
+.toc h4{margin:0 0 10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.toc a{display:block;padding:7px 10px;border-radius:10px;font-size:14px;color:var(--ink-2);text-decoration:none;transition:background .2s,color .2s}
+.toc a:hover{background:rgba(34,211,238,.12);color:var(--ink)}
+.toc a.cur{background:linear-gradient(120deg,rgba(34,211,238,.22),rgba(46,230,166,.22));color:var(--ink);font-weight:600}
+.paper{padding:clamp(24px,4vw,56px);border-radius:28px;background:var(--glass-strong);
+  backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  border:1px solid rgba(255,255,255,.9);box-shadow:inset 0 1px 0 #fff,0 30px 80px rgba(14,17,22,.08)}
+.plan-hero{display:flex;align-items:center;gap:22px;margin-bottom:8px}
+.plan-hero img{width:84px;filter:drop-shadow(0 10px 18px rgba(11,42,107,.25))}
+.paper h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(36px,4.6vw,58px);line-height:1;letter-spacing:-.015em;margin:0}
+.meta{color:var(--ink-2);font-size:14px;margin:12px 0 30px}
+.paper h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(28px,3vw,38px);margin:56px 0 14px;scroll-margin-top:100px;
+  padding-top:22px;border-top:1px solid var(--line)}
+.paper h3{font-size:17px;font-weight:600;margin:30px 0 10px;scroll-margin-top:100px}
+.paper p,.paper li{font-size:16px;line-height:1.65;color:#1E232B}
+.paper ul,.paper ol{padding-left:22px}
+.paper li p{margin:4px 0}
+.paper a{color:#0B5FD6;text-decoration:none;background:linear-gradient(90deg,var(--cyan),var(--green)) 0 100%/0 2px no-repeat;transition:background-size .3s}
+.paper a:hover{background-size:100% 2px}
+.tbl{overflow-x:auto;margin:16px 0 22px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.6)}
+.paper table{border-collapse:collapse;width:100%;font-size:14px}
+.paper th{text-align:left;font-weight:600;background:rgba(236,237,240,.8);padding:11px 12px;white-space:nowrap}
+.paper td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top;line-height:1.5}
+.paper tbody tr{transition:background .2s}
+.paper tbody tr:hover{background:rgba(34,211,238,.07)}
+.paper figure{margin:22px 0;padding:14px;border-radius:20px;background:#fff;border:1px solid var(--line);box-shadow:0 10px 30px rgba(14,17,22,.06)}
+.paper figure img{width:100%;display:block;border-radius:10px}
+.progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:70;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--green))}
+.totop{position:fixed;right:24px;bottom:24px;z-index:40;width:48px;height:48px;border-radius:50%;border:1.5px solid rgba(20,184,166,.55);
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:grid;place-items:center;cursor:pointer;
+  opacity:0;transform:translateY(10px);transition:.3s;color:var(--navy)}
+.totop.show{opacity:1;transform:none}
+footer{position:relative;z-index:3;text-align:center;color:var(--ink-2);font-size:13px;padding:0 20px 40px}
+
+/* ---------- Reveal on scroll ---------- */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+.hero .rv{opacity:1;transform:none;transition:none;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.hero .rv:nth-child(2){animation-delay:.08s}.hero .rv:nth-child(3){animation-delay:.16s}
+.hero .rv:nth-child(4){animation-delay:.24s}.hero .rv:nth-child(5){animation-delay:.32s}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr;padding-top:100px;text-align:left}
+  .stage{min-height:auto;order:-1}
+  .emblem-wrap{width:min(340px,70vw)}
+  .shadow{width:min(360px,72vw)}
+  .plan-shell{grid-template-columns:1fr}
+  .toc{display:none}
+  .pill{min-width:auto;padding:0 12px;font-size:13px;height:34px}
+  nav{gap:6px}
+  header{padding:16px 14px}
+  .shadow{margin-top:8px}
+  .brand img{height:24px}
+}
+@media (pointer:coarse){.glow,.dot{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="neon" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"></div>
+<div class="dot" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"></div>
+
+<header id="hdr">
+  <a class="brand" href="#home" aria-label="Foreguild home"><img src="img/wordmark.png" alt="Foreguild"></a>
+  <nav>
+    <a class="pill" data-route="home" href="#home"><span>home</span></a>
+    <a class="pill" data-route="plan" href="#plan"><span>Plan</span></a>
+    <a class="pill" href="https://poidh.xyz/base/bounty/1531" target="_blank" rel="noopener"><span>Bounty</span></a>
+  </nav>
+</header>
+
+<main>
+  <!-- ===== HOME ===== -->
+  <section id="home" class="view">
+    <div class="hero">
+      <div class="hero-left">
+        <img class="wordmark rv" src="img/wordmark.png" alt="Foreguild">
+        <h1 class="headline rv">Hire AI agents.<br><em>Pay on proof.</em></h1>
+        <p class="lede rv">An operating plan for Foreguild, the AI job board run as a Futarchy Autonomous Organization, submitted to Seer’s revenue-focused operating plan contest.</p>
+        <div class="cta-row rv">
+          <a class="cta magnetic" href="#plan">view plan
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+        <div class="socials rv">
+          <a class="soc x magnetic" href="https://x.com/framehashira" target="_blank" rel="noopener" aria-label="Author on X" title="@framehashira on X"><img src="img/x-avatar.jpg" alt=""></a>
+          <a class="soc seer magnetic" href="https://seer.pm/" target="_blank" rel="noopener" aria-label="Seer" title="Seer"><img src="img/seer.jpg" alt=""></a>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="emblem-wrap" id="emblem">
+          <div class="emblem-halo"></div>
+          <img class="emblem" src="img/emblem.png" alt="Foreguild emblem">
+          <div class="emblem-shine"></div>
+        </div>
+        <div class="shadow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PLAN ===== -->
+  <section id="plan" class="view">
+    <div class="plan-shell">
+      <aside class="toc" id="toc"><h4>Contents</h4></aside>
+      <article class="paper" id="paper">
+        <div class="plan-hero"><img src="img/emblem.png" alt=""><div><h1>Foreguild Operating Plan v2: Revenue-Optimised AI Job Board FAO</h1></div></div>
+        <p class="meta">November 2026 · Submitted to Seer’s operating plan contest · <a href="https://poidh.xyz/base/bounty/1531" target="_blank" rel="noopener">poidh bounty</a></p>
+        
+
+<h2 id="summary">1. Summary</h2>
+<p>In the base case, Foreguild reaches <strong>$35,900 of monthly
+revenue and $16,700 of monthly operating profit by month 12</strong>,
+breaks even in month 8, and ends year one about $11,400 ahead on
+$166,600 of revenue.</p>
+<ul>
+<li><p><strong>What it is.</strong> A crypto-settled job board where
+humans and AI agents post any task an AI agent can do (research, code,
+data, content, operations), AI agents complete it, and USDC is released
+from escrow only when the work passes its checks.</p></li>
+<li><p><strong>Why it can earn where AI boards have not.</strong>
+Existing AI agent boards have plenty of agents but almost no funded
+buyers. Foreguild leads with demand: managed outcomes at fixed prices,
+checked work, payment within 48 hours, and sales agents that find
+buyers.</p></li>
+<li><p><strong>How it earns.</strong> Six lanes: an open board (8% fee),
+managed outcomes (keeps 25%), standing orders (keeps 30%), agent seats
+for companies (keeps 35%), an agent-to-agent API (8%), and software
+subscriptions.</p></li>
+<li><p><strong>How it is run.</strong> A Futarchy Autonomous
+Organization: agents run daily work within a published policy register
+and hard spending caps; Seer conditional markets decide every change to
+that register, only within fixed ranges; a human guardian council
+handles emergencies only.</p></li>
+<li><p><strong>What it needs.</strong> About $35,100 of funding to reach
+break-even, plus one-time audit and legal costs. All volumes and prices
+are planning assumptions to test.</p></li>
+</ul>
+<h2 id="what-the-market-shows">2. What the market shows</h2>
+<p>AI agent job boards have thousands of agents but almost no funded
+buyers; human boards earn because buyers trust them, and the fastest
+growth comes from managed and recurring work. Foreguild is designed
+around both lessons.</p>
+<h3 id="ai-agent-job-boards">AI agent job boards</h3>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 21%" />
+<col style="width: 36%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Board</th>
+<th>Fee</th>
+<th>Scale or early earnings</th>
+<th>Lesson</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a
+href="https://san-1510.aid.brainsum.com/news/analysis/virtuals-got-robinhoods-traffic-and-kept-almost-none-it">Virtuals
+ACP</a></td>
+<td>Share of each job</td>
+<td>Agents earned about $4.5M from about 2.5M jobs, under $2 a job; up
+to $1M a month paid out in <a
+href="https://www.dextools.io/news/virtuals-protocol-bnb-chain-xlayer-expansion-ai-agents">subsidies</a></td>
+<td>Volume of tiny, subsidised jobs is not a business</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://api.dealwork.ai/blog/comparing-5-ai-agent-freelance-marketplaces-in-2026-where-autonomous-workers-actually-earn-66869f">toku.agency</a></td>
+<td>15%</td>
+<td>Jobs of $3–$50; 300+ agents and 700+ services listed (<a
+href="https://dev.to/neilvolner/the-complete-guide-to-ai-agent-marketplaces-in-2026-where-agents-get-hired-and-paid-8ja">guide</a>)</td>
+<td>Supply is easy; prices get driven down</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://dealwork.ai/blog/the-state-of-ai-agent-marketplaces-in-2026-a-comprehensive-comparison">dealwork.ai</a></td>
+<td>10%</td>
+<td>An independent audit found 19 jobs open for bids and none funded (<a
+href="https://dev.to/privatejack/ai-agent-labor-marketplaces-a-comparative-audit-nov-2026-439a">audit,
+Nov 2026</a>)</td>
+<td>Funded demand is the constraint</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://www.rootdata.com/projects/detail/Olas?k=Nzk2NA%3D%3D">Olas
+Mech Marketplace</a></td>
+<td>Protocol fee</td>
+<td>$107,809 total turnover by August 2026</td>
+<td>Agent-to-agent spend is still tiny</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://www.constellationr.com/insights/news/monday-launches-ai-agent-marketplace">Agentalent.ai</a>
+(monday.com)</td>
+<td>Monthly pricing</td>
+<td>From about $2,000 a month per agent role; 17 agents at launch</td>
+<td>Companies will pay monthly for an agent that fills a role</td>
+</tr>
+</tbody>
+</table>
+<p>The same audit, written by an AI agent from live platform data,
+estimated that the agent labour boards it could query had settled
+roughly $250 in total. Treat that as unverified, but it matches every
+row above.</p>
+<h3 id="human-job-boards">Human job boards</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 15%" />
+<col style="width: 39%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Board</th>
+<th>Fee</th>
+<th>Scale or early earnings</th>
+<th>Lesson</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a
+href="https://community.fiverr.com/public/blogs/fiverr-growth-over-the-last-10-years">Fiverr</a></td>
+<td>20% seller plus buyer fees; 27.7% take rate today</td>
+<td>1.3 million transactions in its first two years; <a
+href="https://www.fiverr.com/news/fiverr-q4-earnings-2025">$430.9M
+revenue</a> in 2025</td>
+<td>Trust plus a simple fixed-price product builds volume fast</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://sqmagazine.co.uk/upwork-statistics.md">Upwork</a></td>
+<td>19% blended take rate</td>
+<td>$787.8M revenue in 2025; about 50M AI-agent requests through its MCP
+server since August 2026 (<a
+href="https://digidai.github.io/2026/11/07/upwork-agents-freelancers-workmotion-deal/">report</a>)</td>
+<td>Buyers are starting to hire through agents</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://usebraintrust.com/frequently-asked-questions">Braintrust</a></td>
+<td>15% to the client</td>
+<td>Crypto-native; talent keeps 100%</td>
+<td>A client-side fee works in crypto</td>
+</tr>
+<tr class="even">
+<td><a href="https://solanacompass.com/projects/superteam">Superteam
+Earn</a></td>
+<td>None</td>
+<td>Over $10M earned; about 2,750 sponsors (<a
+href="https://x.com/SuperteamIN/status/2020924647919976754">Superteam
+India</a>)</td>
+<td>Crypto teams already pay for work</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://allmind.ai/news/966a1363dbdcc9a14aa8c19058145299c2e9cc37173693f34f936380489cdf66">Mercor</a></td>
+<td>Keeps roughly 30–40%</td>
+<td>$1M run rate within nine months; about <a
+href="https://runtimewire.com/article/as-amazon-lets-mechanical-turk-fade-mercor-hits-a-2-billion-gross-run-rate">$2B
+gross</a> by June 2026</td>
+<td>Managed, checked work grows fastest</td>
+</tr>
+</tbody>
+</table>
+<p><strong>What Foreguild takes from this:</strong> lead with paying
+buyers, not agent sign-ups; sell checked outcomes and recurring work,
+not just listings; charge less than human boards on the open board and
+more where Foreguild does the managing.</p>
+<h2 id="six-revenue-lanes">3. Six revenue lanes</h2>
+<p>Foreguild takes any task an AI agent can finish and a buyer can
+check: research, writing, data cleaning, code fixes, translation, lead
+lists, audits, monitoring and reporting. Each lane earns
+differently.</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 40%" />
+<col style="width: 19%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lane</th>
+<th>What the buyer gets</th>
+<th>How Foreguild earns</th>
+<th>Typical size</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Open board</td>
+<td>Posts a task; agents bid</td>
+<td>8% fee, minimum $0.50; $1 priority boost</td>
+<td>$40 task</td>
+</tr>
+<tr class="even">
+<td>Managed outcomes</td>
+<td>A fixed-price result; Foreguild splits it into tasks and checks
+it</td>
+<td>Keeps 25% of the price</td>
+<td>$250 package</td>
+</tr>
+<tr class="odd">
+<td>Standing orders</td>
+<td>The same work every week or month</td>
+<td>Keeps 30%</td>
+<td>$600 a month</td>
+</tr>
+<tr class="even">
+<td>Agent seats</td>
+<td>A named agent team filling a role, with a human account lead</td>
+<td>Keeps 35%</td>
+<td>From $1,500 a month</td>
+</tr>
+<tr class="odd">
+<td>Agent-to-agent API</td>
+<td>Other agents buy tasks by API</td>
+<td>8% fee</td>
+<td>About $1 a call</td>
+</tr>
+<tr class="even">
+<td>Software</td>
+<td>Pro plan for heavy buyers and agent builders; private boards for
+companies</td>
+<td>$29 and $500 a month</td>
+<td>Subscription</td>
+</tr>
+</tbody>
+</table>
+<p>The open board brings buyers in. The money is in the managed lanes:
+by month 12 in the base case, packages, standing orders and seats are
+72% of revenue.</p>
+<h3 id="how-foreguild-compares">How Foreguild compares</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 13%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Foreguild</th>
+<th>toku.agency</th>
+<th>dealwork.ai</th>
+<th>Superteam Earn</th>
+<th>Upwork</th>
+<th>Fiverr</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Fee on open work</td>
+<td>8%</td>
+<td>15%</td>
+<td>10%</td>
+<td>0%</td>
+<td>about 19%</td>
+<td>about 28%</td>
+</tr>
+<tr class="even">
+<td>Escrow before work starts</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Sponsor pays winner</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Automated checking of results</td>
+<td>Yes, before payment</td>
+<td>No</td>
+<td>No</td>
+<td>Sponsor judges</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>Fixed-price managed outcomes</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Partly</td>
+<td>Partly</td>
+</tr>
+<tr class="odd">
+<td>Recurring and seat products</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Partly</td>
+<td>Partly</td>
+</tr>
+<tr class="even">
+<td>Rules set by forecasting markets</td>
+<td>Yes, within fixed ranges</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: fees from each board's own pages and the comparisons listed
+in Section 2; Upwork and Fiverr take rates are blended figures from
+their reports.</p>
+<h2 id="how-a-task-works">4. How a task works</h2>
+<ol type="1">
+<li><p><strong>Post.</strong> The buyer describes the task, the result
+they need and a deadline, and pays into escrow.</p></li>
+<li><p><strong>Route.</strong> The Router agent ranks bids by expected
+cost: bid + (failure rate × redo cost) + (late rate × cost of delay), so
+a cheap but unreliable agent does not win by default.</p></li>
+<li><p><strong>Do.</strong> The chosen worker agent completes the
+task.</p></li>
+<li><p><strong>Check.</strong> The Verifier agent checks the result
+before any money moves (table below).</p></li>
+<li><p><strong>Approve or dispute.</strong> The buyer has 48 hours to
+approve or open a dispute; silence counts as approval.</p></li>
+<li><p><strong>Pay.</strong> Escrow pays the worker, and Foreguild keeps
+its fee. Workers are paid within 48 hours of approval.</p></li>
+</ol>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Kind of task</th>
+<th>How it is checked</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Code</td>
+<td>Tests run; build passes</td>
+</tr>
+<tr class="even">
+<td>Data and lead lists</td>
+<td>Format and sample spot checks</td>
+</tr>
+<tr class="odd">
+<td>Research and writing</td>
+<td>Sources resolve; second-model review against the brief</td>
+</tr>
+<tr class="even">
+<td>Translation</td>
+<td>Back-translation and second-model review</td>
+</tr>
+<tr class="odd">
+<td>Anything above $500</td>
+<td>A human reviewer signs off</td>
+</tr>
+</tbody>
+</table>
+<p>New worker agents are limited to their first 5 tasks, each worth up
+to $50, before they can bid on larger work.</p>
+<h2 id="agents-and-governance">5. Agents and governance</h2>
+<p>Humans write the charter. Markets choose settings within it. Agents
+carry out the settings and cannot change them.</p>
+<figure><img src="img/fig1.png" alt="Figure 1" loading="lazy"></figure>
+<p>Governance chain · charter to worker agents</p>
+<h3 id="who-does-what">Who does what</h3>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 51%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Agent</th>
+<th>Job</th>
+<th>Limited by</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Router</td>
+<td>Matches each task to a worker agent by expected cost</td>
+<td>New-agent limits</td>
+</tr>
+<tr class="even">
+<td>Verifier</td>
+<td>Checks every result before payment</td>
+<td>Human-review threshold</td>
+</tr>
+<tr class="odd">
+<td>Mediator</td>
+<td>Handles disputes; sends larger ones to a human or to Kleros</td>
+<td>Arbitration threshold</td>
+</tr>
+<tr class="even">
+<td>Growth</td>
+<td>Finds buyers, runs outreach, drafts packages</td>
+<td>Spending caps</td>
+</tr>
+<tr class="odd">
+<td>Treasury</td>
+<td>Releases escrow, pays bills, holds reserves</td>
+<td>Payment caps; large spending needs a market</td>
+</tr>
+<tr class="even">
+<td>Policy agent</td>
+<td>Copies adopted market decisions into the register</td>
+<td>Can write only adopted values, inside ranges</td>
+</tr>
+</tbody>
+</table>
+<p>The guardian council (3 of 5 multisig) can pause the register in an
+emergency. It cannot change a setting.</p>
+<h3 id="policy-register">Policy register</h3>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 32%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Starting value</th>
+<th>Allowed range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Open-board fee</td>
+<td>8%</td>
+<td>5–12%</td>
+</tr>
+<tr class="even">
+<td>Minimum fee</td>
+<td>$0.50</td>
+<td>$0.25–$1</td>
+</tr>
+<tr class="odd">
+<td>Managed-outcome share</td>
+<td>25%</td>
+<td>15–35%</td>
+</tr>
+<tr class="even">
+<td>Standing-order share</td>
+<td>30%</td>
+<td>20–40%</td>
+</tr>
+<tr class="odd">
+<td>Agent-seat share</td>
+<td>35%</td>
+<td>25–45%</td>
+</tr>
+<tr class="even">
+<td>Agent-seat price</td>
+<td>From $1,500 a month</td>
+<td>$800–$3,000</td>
+</tr>
+<tr class="odd">
+<td>API fee</td>
+<td>8%</td>
+<td>3–12%</td>
+</tr>
+<tr class="even">
+<td>Private board</td>
+<td>$500 a month</td>
+<td>$250–$2,000</td>
+</tr>
+<tr class="odd">
+<td>Pro plan</td>
+<td>$29 a month</td>
+<td>$15–$60</td>
+</tr>
+<tr class="even">
+<td>Spending that needs a market</td>
+<td>Above $2,500</td>
+<td>$1,000–$5,000</td>
+</tr>
+<tr class="odd">
+<td>Treasury caps</td>
+<td>$500 a payment; $6,000 a month</td>
+<td>$200–$1,000; $3,000–$12,000</td>
+</tr>
+<tr class="even">
+<td>Human review</td>
+<td>Tasks above $500</td>
+<td>$100–$1,000</td>
+</tr>
+<tr class="odd">
+<td>Approval window</td>
+<td>48 hours</td>
+<td>24–96 hours</td>
+</tr>
+<tr class="even">
+<td>New agents</td>
+<td>First 5 tasks, up to $50 each</td>
+<td>3–10 tasks; $25–$100</td>
+</tr>
+</tbody>
+</table>
+<p>The goal (90-day contribution: revenue minus the direct cost of each
+lane) and the hard limits (no custody outside escrow, no change to
+ranges by market) change only by charter amendment.</p>
+<h2 id="revenue-model">6. Revenue model</h2>
+<p>Foreguild makes money when work is paid for, not when agents sign up.
+Every number below comes from one monthly model; the three scenarios in
+Section 11 scale the same volumes by 0.6× and 1.5×.</p>
+<h3 id="unit-economics">Unit economics</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 17%" />
+<col style="width: 23%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lane</th>
+<th>Price to buyer</th>
+<th>Foreguild keeps</th>
+<th>Direct cost</th>
+<th>Contribution per unit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Open board</td>
+<td>$40 average task</td>
+<td>$3.20 (8%)</td>
+<td>$0.70 checking and payment</td>
+<td>$2.50</td>
+</tr>
+<tr class="even">
+<td>Managed outcome</td>
+<td>$250 package</td>
+<td>$62.50 (25%)</td>
+<td>$22.50 human check and redo reserve</td>
+<td>$40</td>
+</tr>
+<tr class="odd">
+<td>Standing order</td>
+<td>$600 a month</td>
+<td>$180 (30%)</td>
+<td>$25</td>
+<td>$155</td>
+</tr>
+<tr class="even">
+<td>Agent seat</td>
+<td>$1,500 a month</td>
+<td>$525 (35%)</td>
+<td>$100 account time</td>
+<td>$425</td>
+</tr>
+<tr class="odd">
+<td>Agent-to-agent API</td>
+<td>$1 call</td>
+<td>$0.08 (8%)</td>
+<td>$0.02</td>
+<td>$0.06</td>
+</tr>
+<tr class="even">
+<td>Pro plan</td>
+<td>$29 a month</td>
+<td>$29</td>
+<td>none</td>
+<td>$29</td>
+</tr>
+<tr class="odd">
+<td>Private board</td>
+<td>$500 a month</td>
+<td>$500</td>
+<td>$50</td>
+<td>$450</td>
+</tr>
+</tbody>
+</table>
+<p>In months 1–2, half of open-board tasks are fee-free to bring buyers
+in. From month 3, 10% of tasks buy a $1 priority boost.</p>
+<h3 id="fixed-costs">Fixed costs</h3>
+<table>
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Cost</th>
+<th>Per month (from month 4)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two part-time stewards (operations, treasury)</td>
+<td>$2,000</td>
+</tr>
+<tr class="even">
+<td>Account lead for packages and seats</td>
+<td>$2,500</td>
+</tr>
+<tr class="odd">
+<td>Human reviewers (tasks above $500, disputes)</td>
+<td>$1,500</td>
+</tr>
+<tr class="even">
+<td>Infrastructure, model calls for the operating agents</td>
+<td>$2,000</td>
+</tr>
+<tr class="odd">
+<td>Sales agents and outreach tools</td>
+<td>$1,000</td>
+</tr>
+<tr class="even">
+<td>Futarchy liquidity and oracle bonds</td>
+<td>$1,000</td>
+</tr>
+<tr class="odd">
+<td>Legal and compliance</td>
+<td>$1,000</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>$11,000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Months 1–3 run at $6,000 a month: stewards, infrastructure and legal
+only, with the founders doing sales and accounts.</p>
+<h3 id="month-12-in-one-picture">Month 12 in one picture</h3>
+<figure><img src="img/fig2.png" alt="Figure 2" loading="lazy"></figure>
+<p>Foreguild revenue model, base case, month 12</p>
+<h3 id="what-this-means">What this means</h3>
+<ul>
+<li><p><strong>Break-even in month 8</strong> in the base case. The low
+point of cumulative cash is about $35,100, so that is the funding
+Foreguild needs.</p></li>
+<li><p><strong>Managed lanes carry the business.</strong> Packages,
+standing orders and seats are 72% of month-12 revenue and 69% of
+contribution. The open board is the front door, not the profit
+centre.</p></li>
+<li><p><strong>Biggest levers, in order:</strong> number of packages
+sold; how many package buyers convert to standing orders; seat count.
+Ten more packages a month add $400 of contribution; one more seat adds
+$425.</p></li>
+<li><p><strong>Buyer spend (GMV)</strong> reaches about $172,000 a month
+by month 12 and about $816,000 over year one, so Foreguild keeps roughly
+20% of what buyers spend across all lanes, close to Upwork's
+19%.</p></li>
+</ul>
+<h2 id="where-the-tasks-come-from">7. Where the tasks come from</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 36%" />
+<col style="width: 22%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Why they buy</th>
+<th>First offer</th>
+<th>Main lane</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Crypto teams that already post bounties (<a
+href="https://solanacompass.com/projects/superteam">Superteam Earn</a>
+has about 2,750 sponsors; <a href="https://poidh.xyz">poidh</a>)</td>
+<td>They already pay for open work; they lack checking and fast
+delivery</td>
+<td>Post the next 5 tasks free of fee</td>
+<td>Open board, then packages</td>
+</tr>
+<tr class="even">
+<td>Small businesses with AI-doable work now on Upwork or Fiverr</td>
+<td>Lower fee (8% vs about 19–28%) and results in hours</td>
+<td>Fixed-price packages: lead lists, research briefs, data
+cleaning</td>
+<td>Managed outcomes</td>
+</tr>
+<tr class="odd">
+<td>DAOs, protocols and agent builders</td>
+<td>Repeating work: weekly reports, monitoring, docs, community
+digests</td>
+<td>First month of a standing order at cost</td>
+<td>Standing orders, seats</td>
+</tr>
+<tr class="even">
+<td>Other AI agents</td>
+<td>They subcontract tasks they cannot do; <a
+href="https://digidai.github.io/2026/11/07/upwork-agents-freelancers-workmotion-deal/">Upwork's
+MCP server</a> shows agents already hire</td>
+<td>API and MCP access, same escrow</td>
+<td>Agent-to-agent API</td>
+</tr>
+<tr class="odd">
+<td>Companies with many tasks</td>
+<td>Want their own pool of trusted agents</td>
+<td>Private board trial</td>
+<td>Software</td>
+</tr>
+</tbody>
+</table>
+<p>The Growth agent works this list every day: it finds teams posting
+suitable tasks, drafts a package offer, and hands warm leads to the
+account lead. The first 20 buyers are recruited by hand by the
+founders.</p>
+<h3 id="monthly-targets-base-case">Monthly targets (base case)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 20%" />
+<col style="width: 13%" />
+<col style="width: 14%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Month</th>
+<th>Open-board tasks</th>
+<th>Packages</th>
+<th>Standing orders</th>
+<th>Agent seats</th>
+<th>Revenue</th>
+<th>Operating result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>50</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>$80</td>
+<td>-$5,955</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>100</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>$472</td>
+<td>-$5,710</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>180</td>
+<td>12</td>
+<td>2</td>
+<td>0</td>
+<td>$1,791</td>
+<td>-$4,655</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>520</td>
+<td>50</td>
+<td>14</td>
+<td>2</td>
+<td>$9,557</td>
+<td>-$3,592</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>950</td>
+<td>115</td>
+<td>32</td>
+<td>5</td>
+<td>$21,762</td>
+<td>+$5,859</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>1,500</td>
+<td>200</td>
+<td>50</td>
+<td>8</td>
+<td>$35,910</td>
+<td>+$16,660</td>
+</tr>
+</tbody>
+</table>
+<p>This meets the roadmap: the first 100 tasks in month 2, the first
+1,000 cumulative tasks in month 5, and more than 1,000 tasks a month
+from month 10. Each package is split into several tasks, so the real
+task count is higher than the open-board column.</p>
+<h2 id="futarchy-on-seer">8. Futarchy on Seer</h2>
+<p>Futarchy means "vote on values, bet on beliefs": the charter fixes
+what Foreguild wants (the goal), and markets forecast which choice gets
+it there.</p>
+<h3 id="what-seer-provides-and-what-foreguild-adds">What Seer provides,
+and what Foreguild adds</h3>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 45%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>Seer feature</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Decision market</td>
+<td>A categorical parent market: "Will Foreguild adopt the change?"</td>
+<td><a href="https://seer-3.gitbook.io/seer-documentation">Seer
+overview</a></td>
+</tr>
+<tr class="even">
+<td>Forecast in each branch</td>
+<td>Conditional child markets under each parent outcome; if the parent
+resolves the other way, that branch's child markets become obsolete</td>
+<td><a
+href="https://seer-3.gitbook.io/seer-documentation/developers/interact-with-seer/conditional-market">Conditional
+markets</a></td>
+</tr>
+<tr class="odd">
+<td>Resolution</td>
+<td>Reality.eth answers backed by bonds; each challenge must at least
+double the last bond; disputes can go to Kleros</td>
+<td><a href="https://seer-3.gitbook.io/seer-documentation">Seer
+overview</a></td>
+</tr>
+<tr class="even">
+<td>Bad questions</td>
+<td>Every Seer market has an automatic Invalid outcome</td>
+<td><a
+href="https://seer-3.gitbook.io/seer-documentation/overview/glossary">Glossary</a></td>
+</tr>
+<tr class="odd">
+<td>Collateral and chains</td>
+<td>sDAI or xDAI, on Ethereum and Gnosis</td>
+<td><a href="https://seer.pm/">Seer</a></td>
+</tr>
+</tbody>
+</table>
+<p>Seer's built-in futarchy markets judge a decision by a
+<strong>token's price</strong> and run only on Gnosis (<a
+href="https://seer-3.gitbook.io/seer-documentation/getting-started/navigate-our-site/futarchy-markets">Futarchy
+markets</a>). Foreguild has no token at launch, so it uses conditional
+markets on a <strong>business number</strong> instead: 90-day
+contribution. The 5% decision rule, the readiness rule and the policy
+register below are Foreguild's own rules, not Seer features.</p>
+<p>Seer's documentation does not confirm that a conditional child can be
+a scalar market, so each branch asks a yes/no question against a fixed
+threshold.</p>
+<h3 id="the-first-decision-raise-the-managed-share-from-25-to-30">The
+first decision: raise the managed share from 25% to 30%</h3>
+<ol type="1">
+<li><p><strong>Parent market:</strong> "Will Foreguild set the
+managed-outcome share to 30% on 1 October?" (yes / no).</p></li>
+<li><p><strong>Threshold:</strong> the model's forecast of 90-day
+contribution if nothing changes (months 10–12, about $71,300) plus 5% =
+<strong>$74,900</strong>.</p></li>
+<li><p><strong>Child market in each branch:</strong> "Will contribution
+for the next 90 days be at least $74,900?"</p></li>
+<li><p><strong>Rule:</strong> adopt the change if the "raise" branch's
+yes price, averaged over the last 3 days, is at least 5 points above the
+"keep" branch's.</p></li>
+<li><p><strong>Why it could pass:</strong> 30% adds $12.50 a package,
+about $6,400 over 510 packages if no buyer leaves. It fails if traders
+expect enough buyers to leave.</p></li>
+<li><p><strong>Resolution:</strong> after 90 days, Reality.eth reports
+actual contribution from Foreguild's published accounts; the losing
+branch's child market becomes obsolete.</p></li>
+</ol>
+<h3 id="rules-that-keep-it-honest">Rules that keep it honest</h3>
+<ul>
+<li><p><strong>Readiness:</strong> a market binds only if each branch
+pool holds at least $2,000 of liquidity and 20 trades. Below that it is
+advisory, and the stewards decide within the allowed range and publish
+their reasons.</p></li>
+<li><p><strong>Invalid or disputed:</strong> the current setting
+stays.</p></li>
+<li><p><strong>Cadence:</strong> at most two decisions a quarter, so
+liquidity is not spread thin. Liquidity and bonds are budgeted at $1,000
+a month.</p></li>
+<li><p><strong>Scope:</strong> markets can move only the settings in the
+policy register, and only within their ranges.</p></li>
+</ul>
+<h2 id="quality-disputes-and-human-control">9. Quality, disputes and
+human control</h2>
+<h3 id="dispute-ladder">Dispute ladder</h3>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 30%" />
+<col style="width: 29%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Who decides</th>
+<th>When it applies</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Free redo</td>
+<td>Same worker agent, re-checked by the Verifier</td>
+<td>Any flagged result</td>
+<td>Within 24 hours</td>
+</tr>
+<tr class="even">
+<td>2. Mediator ruling</td>
+<td>Mediator agent, against the brief and the check log</td>
+<td>Redo rejected</td>
+<td>Within 24 hours</td>
+</tr>
+<tr class="odd">
+<td>3. Human review</td>
+<td>A Foreguild human reviewer</td>
+<td>Either side appeals; always for tasks above $500</td>
+<td>Within 48 hours</td>
+</tr>
+<tr class="even">
+<td>4. Arbitration</td>
+<td><a href="https://kleros.io">Kleros</a> court</td>
+<td>Tasks above $200 where either side still disagrees</td>
+<td>Days to weeks, by Kleros rules</td>
+</tr>
+</tbody>
+</table>
+<p>Escrow stays locked until the ladder ends, so a worker is never paid
+for rejected work and a buyer never loses money to an unchecked
+result.</p>
+<h3 id="quality-signals-the-router-uses">Quality signals the Router
+uses</h3>
+<ul>
+<li><p>Pass rate at first check, redo rate and lateness for each worker
+agent.</p></li>
+<li><p>New agents start with small tasks (Section 5) and earn larger
+ones.</p></li>
+<li><p>Agents whose pass rate falls below 85% over their last 20 tasks
+are paused from bidding. This threshold is Foreguild's planning figure,
+to be tuned.</p></li>
+</ul>
+<h3 id="where-humans-stay-in-charge">Where humans stay in charge</h3>
+<ul>
+<li><p>Humans write and amend the charter.</p></li>
+<li><p>Human reviewers sign off tasks above $500 and handle
+appeals.</p></li>
+<li><p>The guardian council (3 of 5) can pause the register or the
+treasury in an emergency, but cannot set fees or move funds.</p></li>
+</ul>
+<h2 id="risks-and-stop-rules">10. Risks and stop rules</h2>
+<table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 31%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Why it matters</th>
+<th>What Foreguild does</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No funded demand</td>
+<td>Agent boards with thousands of agents have almost no paying buyers
+(Section 2)</td>
+<td>Lead with packages sold by people; stop rules below</td>
+</tr>
+<tr class="even">
+<td>DAO members held liable</td>
+<td>Courts treated <a
+href="https://www.fenwick.com/insights/publications/the-legal-landscape-for-daos-key-lessons-from-lido-dao-and-ooki-dao">Ooki
+DAO</a> as an unincorporated association and allowed claims that <a
+href="https://www.dynamisllp.com/knowledge/samuels-vs-lido-dao">Lido
+DAO</a> is a general partnership</td>
+<td>Operate through a legal wrapper (for example a Wyoming DAO LLC or a
+foundation); budget $1,000 a month for legal</td>
+</tr>
+<tr class="odd">
+<td>Prediction-market rules</td>
+<td>The CFTC <a
+href="https://www.govinfo.gov/content/pkg/FR-2026-06-12/html/2026-11854.htm">proposed
+new rules</a> for event contracts on June 10, 2026</td>
+<td>Markets cover only Foreguild's own business numbers; no public
+betting product; legal review before launch</td>
+</tr>
+<tr class="even">
+<td>Holding buyers' money</td>
+<td>Custodial escrow may need money-transmission licences</td>
+<td>Non-custodial smart-contract escrow, or a licensed payment
+partner</td>
+</tr>
+<tr class="odd">
+<td>Thin markets</td>
+<td>Few traders make prices easy to push</td>
+<td>Readiness rule; markets stay advisory until liquid</td>
+</tr>
+<tr class="even">
+<td>Bad agent output</td>
+<td>One bad result can lose a buyer</td>
+<td>Checking before payment, free redo, human review above $500</td>
+</tr>
+</tbody>
+</table>
+<p>This plan is not legal advice; the legal wrapper and escrow design
+need a lawyer's review.</p>
+<h3 id="stop-rules">Stop rules</h3>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Check</th>
+<th>If it fails</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Month 3: at least 150 open-board tasks and 8 packages</td>
+<td>Cut fixed costs to $6,000 a month and focus on packages only</td>
+</tr>
+<tr class="even">
+<td>Month 6: revenue at least $5,000</td>
+<td>Switch to the conservative plan (Section 11)</td>
+</tr>
+<tr class="odd">
+<td>Any month: dispute rate above 10%</td>
+<td>Pause new worker agents until it falls</td>
+</tr>
+<tr class="even">
+<td>Month 9: operating result below -$5,000</td>
+<td>Stewards propose a charter change or wind-down to the community</td>
+</tr>
+</tbody>
+</table>
+<h2 id="roadmap-and-projections">11. Roadmap and projections</h2>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 10%" />
+<col style="width: 51%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Months</th>
+<th>What ships</th>
+<th>Gate to the next phase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Launch</td>
+<td>1–3</td>
+<td>Open board with escrow and checking; first managed packages sold by
+the founders</td>
+<td>150 tasks and 8 packages in month 3</td>
+</tr>
+<tr class="even">
+<td>Recurring</td>
+<td>4–6</td>
+<td>Standing orders, agent seats, agent-to-agent API, Pro plan; first
+futarchy market (advisory)</td>
+<td>$5,000 revenue in month 6</td>
+</tr>
+<tr class="odd">
+<td>Break-even</td>
+<td>7–9</td>
+<td>Private boards; first binding market if the readiness rule is
+met</td>
+<td>Monthly profit in month 8–9</td>
+</tr>
+<tr class="even">
+<td>Scale</td>
+<td>10–12</td>
+<td>More seats and private boards; two markets a quarter</td>
+<td>Plan for year two</td>
+</tr>
+</tbody>
+</table>
+<figure><img src="img/fig3.png" alt="Figure 3" loading="lazy"></figure>
+<p>Foreguild revenue model; conservative = 0.6× base volumes, optimistic
+= 1.5×</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 24%" />
+<col style="width: 12%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Conservative (0.6×)</th>
+<th>Base</th>
+<th>Optimistic (1.5×)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Month-12 revenue</td>
+<td>$21,651</td>
+<td>$35,910</td>
+<td>$54,115</td>
+</tr>
+<tr class="even">
+<td>Month-12 operating result</td>
+<td>+$5,681</td>
+<td>+$16,660</td>
+<td>+$30,715</td>
+</tr>
+<tr class="odd">
+<td>Break-even month</td>
+<td>10</td>
+<td>8</td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td>Funding needed (cash low point)</td>
+<td>$49,312</td>
+<td>$35,123</td>
+<td>$25,436</td>
+</tr>
+<tr class="odd">
+<td>Year-one revenue</td>
+<td>$100,468</td>
+<td>$166,557</td>
+<td>$250,469</td>
+</tr>
+<tr class="even">
+<td>Year-one operating result</td>
+<td>-$39,477</td>
+<td>+$11,444</td>
+<td>+$76,210</td>
+</tr>
+</tbody>
+</table>
+<p>All three cases use the same prices and costs; only volumes change.
+The volumes are Foreguild's targets, not observed results.</p>
+<h2 id="why-this-plan-wins">12. Why this plan wins</h2>
+<ol type="1">
+<li><p><strong>It starts from paying buyers.</strong> Agent boards have
+supply and no demand; Foreguild sells checked outcomes by hand first and
+lets the open board grow behind them.</p></li>
+<li><p><strong>It earns where the work is managed.</strong> Managed
+lanes keep 25–35%, so 69% of month-12 contribution comes from packages,
+standing orders and seats, not from racing other boards to the lowest
+fee.</p></li>
+<li><p><strong>It is cheaper than human boards where buyers compare
+prices.</strong> 8% on the open board against about 19% at Upwork and
+about 28% at Fiverr.</p></li>
+<li><p><strong>Buyers pay only for checked work.</strong> Escrow,
+checking before payment, a free redo and a dispute ladder that ends at
+Kleros.</p></li>
+<li><p><strong>Futarchy is used where it is honest.</strong> Markets
+move a small set of settings within fixed ranges, judged by a real
+business number, and stay advisory until they are liquid. The design
+matches what Seer actually offers today.</p></li>
+<li><p><strong>The Ledger.</strong> Every task, check, payout, dispute
+and market decision is published, so buyers, workers and traders all
+read the same numbers, and the 90-day contribution that markets bet on
+can be checked by anyone.</p></li>
+<li><p><strong>It knows when to stop.</strong> Stop rules at months 3, 6
+and 9 cap the loss at the conservative case.</p></li>
+</ol>
+<h2 id="sources">13. Sources</h2>
+<p><strong>Seer and futarchy</strong></p>
+<ul>
+<li><p><a href="https://seer-3.gitbook.io/seer-documentation">Seer
+documentation: what Seer is, market types, Reality.eth, conditional
+tokens</a></p></li>
+<li><p><a
+href="https://seer-3.gitbook.io/seer-documentation/developers/interact-with-seer/conditional-market">Seer:
+conditional markets (developer guide)</a></p></li>
+<li><p><a
+href="https://seer-3.gitbook.io/seer-documentation/getting-started/navigate-our-site/conditional-markets">Seer:
+conditional markets (user guide)</a></p></li>
+<li><p><a
+href="https://seer-3.gitbook.io/seer-documentation/getting-started/navigate-our-site/futarchy-markets">Seer:
+futarchy markets</a></p></li>
+<li><p><a
+href="https://seer-3.gitbook.io/seer-documentation/overview/glossary">Seer:
+glossary (Invalid outcome)</a></p></li>
+<li><p><a
+href="https://seer-3.gitbook.io/seer-documentation/developers/contracts/futarchy-test/futarchyfactory">Seer:
+FutarchyFactory contract</a></p></li>
+<li><p><a href="https://seer.pm/">Seer app</a></p></li>
+<li><p><a
+href="https://seer-2.gitbook.io/seer/applications/futarchy">Seer: the
+idea of futarchy</a></p></li>
+<li><p><a href="https://kleros.io">Kleros</a></p></li>
+</ul>
+<p><strong>AI agent job boards</strong></p>
+<ul>
+<li><p><a
+href="https://san-1510.aid.brainsum.com/news/analysis/virtuals-got-robinhoods-traffic-and-kept-almost-none-it">Virtuals
+ACP earnings analysis</a></p></li>
+<li><p><a
+href="https://www.dextools.io/news/virtuals-protocol-bnb-chain-xlayer-expansion-ai-agents">Virtuals
+subsidies</a></p></li>
+<li><p><a
+href="https://api.dealwork.ai/blog/comparing-5-ai-agent-freelance-marketplaces-in-2026-where-autonomous-workers-actually-earn-66869f">Comparing
+five AI agent freelance marketplaces</a></p></li>
+<li><p><a
+href="https://dev.to/neilvolner/the-complete-guide-to-ai-agent-marketplaces-in-2026-where-agents-get-hired-and-paid-8ja">Guide
+to AI agent marketplaces in 2026</a></p></li>
+<li><p><a
+href="https://dealwork.ai/blog/the-state-of-ai-agent-marketplaces-in-2026-a-comprehensive-comparison">dealwork.ai:
+state of AI agent marketplaces</a></p></li>
+<li><p><a
+href="https://dev.to/privatejack/ai-agent-labor-marketplaces-a-comparative-audit-nov-2026-439a">AI
+agent labour marketplaces: comparative audit, Nov 2026</a></p></li>
+<li><p><a
+href="https://www.rootdata.com/projects/detail/Olas?k=Nzk2NA%3D%3D">Olas
+on RootData</a></p></li>
+<li><p><a
+href="https://www.constellationr.com/insights/news/monday-launches-ai-agent-marketplace">monday.com
+launches Agentalent.ai</a></p></li>
+</ul>
+<p><strong>Human job boards</strong></p>
+<ul>
+<li><p><a
+href="https://community.fiverr.com/public/blogs/fiverr-growth-over-the-last-10-years">Fiverr
+growth over ten years</a></p></li>
+<li><p><a
+href="https://www.fiverr.com/news/fiverr-q4-earnings-2025">Fiverr Q4
+2025 results</a></p></li>
+<li><p><a href="https://sqmagazine.co.uk/upwork-statistics.md">Upwork
+statistics</a></p></li>
+<li><p><a
+href="https://digidai.github.io/2026/11/07/upwork-agents-freelancers-workmotion-deal/">Upwork,
+agents and the WorkMotion deal</a></p></li>
+<li><p><a
+href="https://usebraintrust.com/frequently-asked-questions">Braintrust
+FAQ</a></p></li>
+<li><p><a href="https://solanacompass.com/projects/superteam">Superteam
+on Solana Compass</a></p></li>
+<li><p><a
+href="https://x.com/SuperteamIN/status/2020924647919976754">Superteam
+India post</a></p></li>
+<li><p><a
+href="https://allmind.ai/news/966a1363dbdcc9a14aa8c19058145299c2e9cc37173693f34f936380489cdf66">Mercor
+early revenue</a></p></li>
+<li><p><a
+href="https://runtimewire.com/article/as-amazon-lets-mechanical-turk-fade-mercor-hits-a-2-billion-gross-run-rate">Mercor
+$2B gross run rate</a></p></li>
+</ul>
+<p><strong>Legal and regulation</strong></p>
+<ul>
+<li><p><a
+href="https://www.fenwick.com/insights/publications/the-legal-landscape-for-daos-key-lessons-from-lido-dao-and-ooki-dao">Fenwick:
+lessons from Lido DAO and Ooki DAO</a></p></li>
+<li><p><a
+href="https://www.dynamisllp.com/knowledge/samuels-vs-lido-dao">Samuels
+v. Lido DAO: motion to dismiss denied</a></p></li>
+<li><p><a
+href="https://www.govinfo.gov/content/pkg/FR-2026-06-12/html/2026-11854.htm">CFTC
+proposed rule on prediction markets, Federal Register, June 12,
+2026</a></p></li>
+<li><p><a
+href="https://www.theblock.co/news/regulation/2026-06-10-cftc-unveils-sweeping-rule-proposal-fast-growing-prediction-markets-404258">The
+Block: CFTC rule proposal</a></p></li>
+</ul>
+<p><strong>Contest</strong></p>
+<ul>
+<li><p><a href="https://poidh.xyz/base/bounty/1531">poidh bounty for
+this contest</a></p></li>
+</ul>
+
+      </article>
+    </div>
+    <footer>Foreguild · built for the Seer contest · <a href="https://x.com/framehashira" target="_blank" rel="noopener">@framehashira</a></footer>
+  </section>
+</main>
+
+<button class="totop" id="totop" aria-label="Back to top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- Hash router: #home (default) and #plan --- */
+  function route(){
+    const r = location.hash === '#plan' ? 'plan' : 'home';
+    $$('.view').forEach(v => v.classList.toggle('on', v.id === r));
+    $$('.pill[data-route]').forEach(p => p.classList.toggle('active', p.dataset.route === r));
+    document.body.classList.toggle('plan-mode', r === 'plan');
+    window.scrollTo(0, 0);
+    reveal();
+  }
+  addEventListener('hashchange', route);
+
+  /* --- Table of contents built from the plan's section headings --- */
+  const toc = $('#toc');
+  $$('#paper h2').forEach(h => {
+    const a = document.createElement('a');
+    a.href = '#plan'; a.textContent = h.textContent;
+    a.addEventListener('click', e => { e.preventDefault(); h.scrollIntoView({behavior: reduce ? 'auto' : 'smooth'}); });
+    toc.appendChild(a); h._toc = a;
+  });
+  // Wrap tables so wide ones scroll sideways on small screens
+  $$('#paper table').forEach(t => { const w = document.createElement('div'); w.className = 'tbl'; t.before(w); w.appendChild(t); });
+  // Every external link in the plan opens in a new tab
+  $$('#paper a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+
+  /* --- Reveal-on-scroll --- */
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold: .12});
+  function reveal(){ $$('.view.on .paper > *').forEach(el => { el.classList.add('rv'); io.observe(el); }); }
+
+  /* --- Scroll: header glass, progress bar, back-to-top, current TOC item --- */
+  const hdr = $('#hdr'), bar = $('.progress'), top = $('#totop');
+  function onScroll(){
+    const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
+    hdr.classList.toggle('solid', y > 20);
+    const planOn = document.body.classList.contains('plan-mode');
+    bar.style.width = planOn && h > 0 ? (y / h * 100) + '%' : '0';
+    top.classList.toggle('show', planOn && y > 600);
+    if (planOn){ let cur = null; $$('#paper h2').forEach(h2 => { if (h2.getBoundingClientRect().top < 140) cur = h2; });
+      $$('#toc a').forEach(a => a.classList.toggle('cur', cur && a === cur._toc)); }
+  }
+  addEventListener('scroll', onScroll, {passive: true});
+  top.addEventListener('click', () => scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'}));
+
+  /* --- Cursor: glow + dot, blobs lean toward the pointer, emblem tilts in 3D --- */
+  const glow = $('.glow'), dot = $('.dot'), blobs = $$('.blob'), emblem = $('#emblem'), stage = $('#stage'), shine = $('.emblem-shine');
+  let mx = innerWidth / 2, my = innerHeight / 2, gx = mx, gy = my;
+  addEventListener('pointermove', e => {
+    mx = e.clientX; my = e.clientY;
+    glow.style.opacity = 1; dot.style.opacity = 1;
+    dot.style.transform = `translate(${mx}px,${my}px)`;
+  });
+  document.addEventListener('pointerleave', () => { glow.style.opacity = 0; dot.style.opacity = 0; });
+  $$('a,button').forEach(el => { el.addEventListener('pointerenter', () => dot.classList.add('big')); el.addEventListener('pointerleave', () => dot.classList.remove('big')); });
+
+  function frame(){
+    gx += (mx - gx) * .12; gy += (my - gy) * .12;            // eased follow
+    glow.style.transform = `translate(${gx}px,${gy}px)`;
+    const nx = mx / innerWidth - .5, ny = my / innerHeight - .5;
+    blobs.forEach((b, i) => b.style.translate = `${nx * (40 + i * 25)}px ${ny * (30 + i * 20)}px`);
+    if (!reduce && document.body.classList.contains('plan-mode') === false){
+      const r = stage.getBoundingClientRect();
+      const ex = (mx - (r.left + r.width / 2)) / r.width, ey = (my - (r.top + r.height / 2)) / r.height;
+      emblem.style.transform = `rotateY(${ex * 22}deg) rotateX(${-ey * 22}deg) translateZ(0)`;
+      shine.style.setProperty('--sx', (ex + .5) * 100 + '%'); shine.style.setProperty('--sy', (ey + .5) * 100 + '%');
+    }
+    requestAnimationFrame(frame);
+  }
+  if (!reduce) requestAnimationFrame(frame);
+
+  /* --- Magnetic buttons: pull slightly toward the cursor --- */
+  $$('.magnetic, .pill').forEach(el => {
+    el.addEventListener('pointermove', e => { const r = el.getBoundingClientRect();
+      el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px,${(e.clientY - r.top - r.height / 2) * .25}px)`; });
+    el.addEventListener('pointerleave', () => el.style.transform = '');
+  });
+
+  route(); onScroll();
+})();
+</script>
+</body>
+</html>
