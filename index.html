@@ -180,6 +180,20 @@ footer{position:relative;z-index:3;text-align:center;color:var(--ink-2);font-siz
   .shadow{margin-top:8px}
   .brand img{height:24px}
 }
+
+/* ---------- Print / PDF: plan only, plain white, everything visible ---------- */
+@media print{
+  @page{size:A4;margin:16mm 14mm}
+  body{background:#fff}
+  .neon,.grain,.glow,.dot,.progress,.totop,header,.toc,#home,footer{display:none!important}
+  #plan{display:block!important;animation:none}
+  .plan-shell{display:block;padding:0}
+  .paper{background:#fff;box-shadow:none;border:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .rv{opacity:1!important;transform:none!important}
+  .paper h2{break-after:avoid}
+  .paper figure,.paper tr{break-inside:avoid}
+  .paper a{color:#0B5FD6;background:none}
+}
 @media (pointer:coarse){.glow,.dot{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
